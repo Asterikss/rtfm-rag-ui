@@ -1,82 +1,74 @@
 import { useState } from 'react';
 import { useChat } from '@/hooks/useChat';
+import { useIndexes } from '@/hooks/useIndexes';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { ChatInput } from '@/components/chat/ChatInput';
+import { IndexSelector } from '@/components/chat/IndexSelector';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { ChatLoadingMessage } from '@/components/chat/ChatLoadingMessage';
+import { ControlPanel } from '@/components/chat/ControlPanel';
 
 function App() {
   const { messages, isLoading, error, sendMessage, clearMessages } = useChat();
-  const [indexName, setIndexName] = useState('');
+  const {
+    indexes,
+    selectedIndex,
+    setSelectedIndex,
+    isLoading: indexesLoading,
+  } = useIndexes();
   const [userId] = useState('user-' + crypto.randomUUID().slice(0, 8));
 
   const handleSendMessage = (text: string) => {
-    if (!indexName.trim()) {
-      alert('Please enter an index name first');
+    if (!selectedIndex) {
       return;
     }
-    sendMessage(text, indexName.trim(), userId);
+    sendMessage(text, selectedIndex, userId);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
-      <header className="bg-white border-b p-4">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">RTFM Assistant</h1>
+    // <div className="min-h-screen bg-slate-800/80 flex">
+    // <div className="min-h-screen bg-fuchsia-50/20 flex">
+    <div className="min-h-screen bg-zinc-800 flex">
+      {/* Left Panel */}
+      <ControlPanel
+        onClearChat={clearMessages}
+        isChatEmpty={messages.length === 0}
+      />
 
-          <div className="flex gap-4 items-center">
-            <div className="flex-1">
-              <Input
-                placeholder="Enter index name (e.g., 'docs_tinygrad_org')"
-                value={indexName}
-                onChange={(e) => setIndexName(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <Button 
-              onClick={clearMessages}
-              variant="outline"
-              disabled={messages.length === 0}
-            >
-              Clear Chat
-            </Button>
-          </div>
-        </div>
-      </header>
+      {/* Main Content (Center) */}
+      <div className="flex-1 flex flex-col">
+        {/* HEADER REMOVED */}
 
-      {/* Chat Area */}
-      <main className="flex-1 max-w-4xl mx-auto w-full flex flex-col">
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.length === 0 ? (
-            <Card className="p-8 text-center">
-              <h2 className="text-lg font-semibold text-gray-600 mb-2">
-                "Read The Friendly Manual" Assistant it is!
-              </h2>
-              <p className="text-gray-500">
-                Enter an index name above and start asking questions about the chosen documentation.
-              </p>
-            </Card>
-          ) : (
-            messages.map((message) => (
+        {/* Chat Area */}
+        <main className="flex-1 max-w-4xl mx-auto w-full flex flex-col pt-16">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
-            ))
-          )}
+            ))}
+            {isLoading && <ChatLoadingMessage />}
 
-          {error && (
-            <Card className="p-4 bg-red-50 border-red-200">
-              <p className="text-red-600 text-sm">Error: {error}</p>
-            </Card>
-          )}
-        </div>
+            {error && (
+              <Card className="p-4 bg-red-50 border-red-200">
+                <p className="text-red-600 text-sm">Error: {error}</p>
+              </Card>
+            )}
+          </div>
 
-        <ChatInput
-          onSendMessage={handleSendMessage}
-          isLoading={isLoading}
-          disabled={!indexName.trim()}
-        />
-      </main>
+          <ChatInput
+            onSendMessage={handleSendMessage}
+            isLoading={isLoading}
+            disabled={!selectedIndex || indexesLoading}
+          />
+        </main>
+      </div>
+
+      {/* Right Panel */}
+      <IndexSelector
+        indexes={indexes}
+        selectedIndex={selectedIndex}
+        onSelectIndex={setSelectedIndex}
+        isLoading={indexesLoading}
+      />
     </div>
   );
 }
