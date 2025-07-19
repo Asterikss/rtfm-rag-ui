@@ -47,7 +47,7 @@ export const ChatInput = ({
         disabled={!message.trim() || isLoading || disabled}
         className="h-12 px-6"
       >
-        {isLoading ? "Sending..." : "Send"}
+        Send
       </Button>
     </form>
   );
